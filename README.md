@@ -2,7 +2,7 @@
 
 This project demonstrates a secure, production-ready CI/CD pipeline for deploying a containerized Node.js application to AWS ECS Fargate using modular Terraform and GitHub Actions.
 
-![Architecture Diagram](./architecture.png)
+
 
 ---
 
