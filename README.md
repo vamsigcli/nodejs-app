@@ -90,8 +90,7 @@ docker push <account-id>.dkr.ecr.<region>.amazonaws.com/<ecr-repo-name>:latest
 
 ---
 
-## Diagram
-Add an architecture diagram as `architecture.png` in the repo root. Example structure:
+
 
 ```
 [User] ---> [ALB (Public Subnet)] ---> [ECS Service (Private Subnet)] ---> [ECR, CloudWatch, IAM]
