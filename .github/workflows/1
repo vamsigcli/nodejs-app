@@ -1,0 +1,82 @@
+name: Deploy to ECS
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: nodejs-app
+  ECS_CLUSTER: ecs-prod-cluster
+  ECS_SERVICE: nodejs-app-service
+  CONTAINER_NAME: nodejs-app
+  ECS_TASK_DEFINITION: nodejs-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials (OIDC)
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Install dependencies and run tests/lint
+      run: |
+        cd node-js-app
+        npm ci
+        npm test
+        npx eslint .
+
+    - name: Build, tag, and push image
+      id: build-image
+      run: |
+        IMAGE_TAG=${{ github.sha }}
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./node-js-app
+        docker tag $ECR_REPOSITORY:$IMAGE_TAG ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push ${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=${{ steps.login-ecr.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Install jq
+      run: sudo apt-get install -y jq
+
+    - name: Update ECS task definition
+      id: task-def
+      run: |
+        TASK_DEF=$(aws ecs describe-task-definition --task-definition $ECS_TASK_DEFINITION --no-cli-pager)
+        NEW_TASK_DEF=$(echo $TASK_DEF | jq \
+          --arg IMAGE "${{ steps.build-image.outputs.image }}" \
+          '.taskDefinition |
+          .containerDefinitions[0].image=$IMAGE |
+          del(.taskDefinitionArn,.revision,.status,.requiresAttributes,.compatibilities,.registeredAt,.registeredBy)')
+        echo "$NEW_TASK_DEF" > task-def.json
+
+    - name: Register task definition
+      id: register-task
+      run: |
+        NEW_REVISION=$(aws ecs register-task-definition \
+          --cli-input-json file://task-def.json \
+          --query 'taskDefinition.taskDefinitionArn' \
+          --output text --no-cli-pager)
+        echo "task_def=$NEW_REVISION" >> $GITHUB_OUTPUT
+
+    - name: Update ECS service
+      run: |
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --task-definition ${{ steps.register-task.outputs.task_def }} \
+          --no-cli-pager
+
