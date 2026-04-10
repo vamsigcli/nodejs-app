@@ -1,8 +1,11 @@
 const express = require('express');
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Hello from ECS Fargate v2');
+app.get('/', (req, res) => { // eslint-disable-line consistent-return
+  // TEMP: Intentional crash to test ECS deployment circuit breaker rollback
+  // Remove this block and restore the original response after rollback is verified
+  console.error('Intentional failure for ECS rollback test');
+  process.exit(1);
 });
 
 if (require.main === module) {
