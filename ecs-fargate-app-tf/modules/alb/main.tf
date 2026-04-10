@@ -59,3 +59,13 @@ output "target_group_arn" {
 output "alb_sg_id" {
   value = aws_security_group.alb.id
 }
+
+output "alb_dns_name" {
+  value       = aws_lb.this.dns_name
+  description = "Public DNS name of the ALB"
+}
+
+output "alb_arn_suffix" {
+  value       = aws_lb.this.arn_suffix
+  description = "ARN suffix of the ALB — used by CloudWatch alarm dimensions"
+}

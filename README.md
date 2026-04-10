@@ -77,9 +77,14 @@ docker push <account-id>.dkr.ecr.<region>.amazonaws.com/<ecr-repo-name>:latest
 ---
 
 ## Runbook & Operations
-- **Rollback**: Update ECS task definition to previous image/tag and redeploy.
-- **Alarms**: CloudWatch alarms notify on ALB 5xx errors and ECS unhealthy tasks.
-- **Extensibility**: Add SNS/email notifications, blue/green deployments, or more tests as needed.
+
+| Action | How |
+|--------|-----|
+| **Manual rollback** | `aws ecs update-service --cluster ecs-prod-cluster --service nodejs-app-service --task-definition nodejs-app:<N>` |
+| **Check alarm state** | `aws cloudwatch describe-alarms --alarm-names ALB-5XX-Errors ECS-Running-Task-Count --no-cli-pager` |
+| **View Lambda rollback logs** | AWS Console → CloudWatch → Log groups → `/aws/lambda/ecs-rollback-on-alarm` |
+| **Test live app** | `curl http://<alb-dns>/` and `curl http://<alb-dns>/health` |
+| **Extensibility** | Add HTTPS/ACM, blue/green CodeDeploy, or Slack webhook from SNS |
 
 ---
 
