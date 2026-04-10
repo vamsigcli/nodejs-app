@@ -96,3 +96,9 @@ variable "ecs_service_name" {
   type        = string
   default     = "nodejs-app-service"
 }
+
+variable "alert_email" {
+  description = "Email address to receive ECS rollback and alarm notifications."
+  type        = string
+  default     = "vamsigcli@gmail.com"
+}

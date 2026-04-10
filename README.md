@@ -91,6 +91,42 @@ docker push <account-id>.dkr.ecr.<region>.amazonaws.com/<ecr-repo-name>:latest
 ---
 
 
+## CloudWatch Alarm-Triggered Automatic Rollback
+
+We have implemented a fully automated rollback strategy that triggers when a CloudWatch alarm fires (e.g., ALB 5xx errors or ECS running task count drops). Here is the complete flow:
+
+```
+CloudWatch Alarm → SNS Topic → Lambda Function → ECS UpdateService (previous task definition)
+```
+
+### Components Implemented
+
+| Component | Description |
+|-----------|-------------|
+| **CloudWatch Alarms** | Monitor ALB 5xx errors and ECS running task count |
+| **SNS Topic** (`ecs-rollback-alerts`) | Receives alarm notifications |
+| **Lambda Function** (`ecs-rollback-on-alarm`) | Subscribes to SNS, finds previous stable task definition, rolls back ECS service |
+| **IAM Role** (`lambda-rollback-role`) | Grants Lambda permissions to describe/update ECS services |
+
+### How It Works
+1. A CloudWatch alarm fires (ALB 5xx errors or unhealthy ECS tasks detected).
+2. The alarm sends a notification to the **SNS topic**.
+3. **Lambda** is triggered by SNS. It:
+   - Calls `ecs:DescribeServices` to get the current task definition family.
+   - Calls `ecs:ListTaskDefinitions` (sorted DESC) to find the **previous stable revision**.
+   - Calls `ecs:UpdateService` with `forceNewDeployment=true` to roll back.
+4. ECS replaces running tasks with the previous stable version.
+5. Lambda logs all actions to **CloudWatch Logs** (`/aws/lambda/ecs-rollback-on-alarm`).
+
+### Terraform Resources
+- `aws_sns_topic.ecs_rollback_alerts` — SNS topic wired to both alarms.
+- `aws_lambda_function.ecs_rollback` — Lambda zipped from `lambda_rollback.py`.
+- `aws_lambda_permission.allow_sns_invoke` — Allows SNS to invoke Lambda.
+- `aws_sns_topic_subscription.lambda_rollback_sub` — Subscribes Lambda to SNS.
+- `aws_iam_role.lambda_rollback_role` + `aws_iam_role_policy.lambda_rollback_policy` — Least-privilege IAM for Lambda.
+
+---
+
 ## ECS Deployment Circuit Breaker (Automatic Rollback)
 
 I have implemented automatic rollback for ECS deployments using the ECS deployment circuit breaker feature. This ensures that if a deployment fails—such as when new tasks become unhealthy or cannot start—ECS will automatically revert the service to the last stable version, minimizing downtime and manual intervention.
