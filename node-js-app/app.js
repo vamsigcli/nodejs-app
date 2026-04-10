@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  res.send('Hello from ECS Fargate');
+  res.send('Hello from ECS Fargate v2');
 });
 
 if (require.main === module) {
