@@ -2,9 +2,7 @@ const express = require('express');
 const app = express();
 
 app.get('/', (req, res) => {
-  // Intentionally crash the app for rollback test
-  throw new Error('Intentional failure for rollback test');
-  // res.send('Hello from ECS Fargate v2');
+  res.send('Hello from ECS Fargate');
 });
 
 if (require.main === module) {
