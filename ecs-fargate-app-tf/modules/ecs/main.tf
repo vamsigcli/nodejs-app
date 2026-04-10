@@ -68,6 +68,10 @@ resource "aws_ecs_service" "this" {
     container_name   = var.app_name
     container_port   = var.container_port
   }
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
   depends_on = [aws_ecs_task_definition.this]
   tags = var.tags
 }

@@ -80,9 +80,9 @@ variable "alb_name" {
 }
 
 variable "github_repo" {
-  description = "GitHub repository in the format owner/repo (e.g., vamsi/node-demo-app)"
+  description = "GitHub repository in the format owner/repo (e.g., vamsi/nodejs-app)"
   type        = string
-  default     = "vamsigcli/nodejs-demo-app"
+  default     = "vamsigcli/nodejs-app"
 }
 
 variable "alb_arn_suffix" {
@@ -95,4 +95,10 @@ variable "ecs_service_name" {
   description = "The name of the ECS service (for CloudWatch alarm dimension)."
   type        = string
   default     = "nodejs-app-service"
+}
+
+variable "image" {
+  description = "Container image to deploy."
+  type        = string
+  default     = "invalid-image:latest"
 }

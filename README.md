@@ -91,6 +91,14 @@ docker push <account-id>.dkr.ecr.<region>.amazonaws.com/<ecr-repo-name>:latest
 ---
 
 
+## ECS Deployment Circuit Breaker (Automatic Rollback)
+
+I have implemented automatic rollback for ECS deployments using the ECS deployment circuit breaker feature. This ensures that if a deployment fails—such as when new tasks become unhealthy or cannot start—ECS will automatically revert the service to the last stable version, minimizing downtime and manual intervention.
+
+### How I Implemented Rollback
+- The ECS service is configured in Terraform with the `deployment_circuit_breaker` block, setting `enable = true` and `rollback = true`.
+- With this setup, ECS continuously monitors deployments. If a failure is detected, ECS triggers an automatic rollback to the previous stable task definition revision.
+- This approach provides fast, reliable rollbacks and aligns with AWS best practices for resilient, production-grade deployments.
 
 ```
 [User] ---> [ALB (Public Subnet)] ---> [ECS Service (Private Subnet)] ---> [ECR, CloudWatch, IAM]
