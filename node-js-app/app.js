@@ -7,12 +7,9 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
-// INTENTIONAL BREAK: returns 500 to trigger CloudWatch alarm → Lambda rollback
+// Main route — returns 200 with a greeting message
 app.get('/', (req, res) => {
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: 'TEMP: Intentional 500 to test CloudWatch alarm → Lambda rollback'
-  });
+  res.send('Hello from ECS Fargate v2');
 });
 
 if (require.main === module) {
