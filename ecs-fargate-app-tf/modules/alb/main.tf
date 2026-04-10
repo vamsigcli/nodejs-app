@@ -32,7 +32,12 @@ resource "aws_lb_target_group" "this" {
   target_type = "ip"
   vpc_id      = var.vpc_id
   health_check {
-    path = "/"
+    path                = "/health"
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    interval            = 30
+    timeout             = 5
+    matcher             = "200"
   }
   tags = var.tags
 }
