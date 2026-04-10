@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 
-app.get('/', (req, res) => { // eslint-disable-line consistent-return
+app.get('/', (_req, _res) => {
   // TEMP: Intentional crash to test ECS deployment circuit breaker rollback
   // Remove this block and restore the original response after rollback is verified
   console.error('Intentional failure for ECS rollback test');
