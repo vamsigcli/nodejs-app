@@ -76,18 +76,6 @@ docker push <account-id>.dkr.ecr.<region>.amazonaws.com/<ecr-repo-name>:latest
 
 ---
 
-## Runbook & Operations
-
-| Action | How |
-|--------|-----|
-| **Manual rollback** | `aws ecs update-service --cluster ecs-prod-cluster --service nodejs-app-service --task-definition nodejs-app:<N>` |
-| **Check alarm state** | `aws cloudwatch describe-alarms --alarm-names ALB-5XX-Errors ECS-Running-Task-Count --no-cli-pager` |
-| **View Lambda rollback logs** | AWS Console → CloudWatch → Log groups → `/aws/lambda/ecs-rollback-on-alarm` |
-| **Test live app** | `curl http://<alb-dns>/` and `curl http://<alb-dns>/health` |
-| **Extensibility** | Add HTTPS/ACM, blue/green CodeDeploy, or Slack webhook from SNS |
-
----
-
 ## OIDC Setup for GitHub Actions
 1. Create OIDC provider and IAM role using Terraform (`oidc-github.tf`).
 2. Update `github_repo` variable to match your repo.
@@ -147,5 +135,60 @@ I have implemented automatic rollback for ECS deployments using the ECS deployme
 
 ---
 
-## Contact & Contributions
-Open issues or PRs for improvements, security suggestions, or questions...
+## High-Level Architecture Diagram
+
+```
+                     ┌──────────────────────────────┐
+                     │        GitHub Actions        │
+                     │  (CI/CD Pipeline - OIDC)     │
+                     └──────────────┬───────────────┘
+                                    │
+                                    ▼
+                     ┌──────────────────────────────┐
+                     │             ECR              │
+                     │   (Docker Image Registry)    │
+                     └──────────────┬───────────────┘
+                                    │
+                                    ▼
+        ┌────────────────────────────────────────────────────┐
+        │                     VPC                            │
+        │                                                    │
+        │   ┌──────────────────────────────┐                 │
+        │   │     Public Subnet            │                 │
+        │   │  ┌────────────────────────┐  │                 │
+        │   │  │  Application Load      │  │                 │
+User ───────► │  │  Balancer (ALB)      │  │                 │
+        │   │  └──────────┬─────────────┘  │                 │
+        │   │             │                │                 │
+        │   └─────────────▼────────────────┘                 │
+        │   ┌──────────────────────────────┐                 │
+        │   │     Private Subnet           │                 │
+        │   │  ┌────────────────────────┐  │                 │
+        │   │  │   ECS Fargate Tasks    │◄─┼──── Pull Image  │
+        │   │  │   (Node.js App)        │  │      from ECR   │
+        │   │  └──────────┬─────────────┘  │                 │
+        │   └─────────────▼────────────────┘                 │
+        │                                                    │
+        └────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌──────────────────────────────┐
+                     │        CloudWatch            │
+                     │  Logs + Metrics + Alarms     │
+                     └──────────────┬───────────────┘
+                                    │
+                             Alarm Trigger
+                                    ▼
+                     ┌──────────────────────────────┐
+                     │             SNS              │
+                     └──────────────┬───────────────┘
+                                    │
+                                    ▼
+                     ┌──────────────────────────────┐
+                     │     Lambda Rollback          │
+                     │  (Revert ECS Task Version)   │
+                     └──────────────────────────────┘
+```
+
+---
+

@@ -88,7 +88,7 @@ variable "github_repo" {
 variable "alb_arn_suffix" {
   description = "The ARN suffix of the ALB (for CloudWatch alarm dimension)."
   type        = string
-  default     = "app/ecs-prod-alb/469508e5aa5a26b0"
+  default     = "app/ecs-prod-alb/98847c87d51ce522"
 }
 
 variable "ecs_service_name" {
