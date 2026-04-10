@@ -107,4 +107,4 @@ I have implemented automatic rollback for ECS deployments using the ECS deployme
 ---
 
 ## Contact & Contributions
-Open issues or PRs for improvements, security suggestions, or questions..
+Open issues or PRs for improvements, security suggestions, or questions...
