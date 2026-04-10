@@ -96,9 +96,3 @@ variable "ecs_service_name" {
   type        = string
   default     = "nodejs-app-service"
 }
-
-variable "image" {
-  description = "Container image to deploy."
-  type        = string
-  default     = "invalid-image:latest"
-}

@@ -1,3 +1,5 @@
+throw new Error("Intentional failure for rollback test");
+
 const express = require('express');
 const app = express();
 
