@@ -69,12 +69,12 @@ resource "aws_sns_topic_subscription" "lambda_rollback_sub" {
 resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors" {
   alarm_name          = "ALB-5XX-Errors"
   comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 3
-  metric_name         = "HTTPCode_Target_5XX_Count"
+  evaluation_periods  = 1
+  metric_name         = "HTTPCode_ELB_5XX_Count"
   namespace           = "AWS/ApplicationELB"
   period              = 60
   statistic           = "Sum"
-  threshold           = 1
+  threshold           = 0
   alarm_description   = "Alarm if ALB returns 5xx errors — triggers ECS rollback via Lambda."
   alarm_actions       = [aws_sns_topic.ecs_rollback_alerts.arn]
   ok_actions          = [aws_sns_topic.ecs_rollback_alerts.arn]
